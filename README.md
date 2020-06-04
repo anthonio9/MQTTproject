@@ -9,8 +9,8 @@ W folderze src/sctp_mqtt pojawiła się pierwsza klasa mająca byc podstawą dla
 
 ## Wykonawcy
 
-Antoni Jankowski: 	296905
-Natalia Skawińska:	296937
+Antoni Jankowski
+Natalia Skawińska
 
 ## Opis projektu
 
