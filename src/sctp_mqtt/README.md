@@ -14,10 +14,11 @@ Biblioteka SCTPmqtt zawiera klasy serwera i klienta, które są podstawą do kla
 * echo() - continuos execution of recv_sctp() followed by send_sctp().
 * close() - # TODO
 
-## ServerSCTP - TODO
+## ServerMQTT (BaseSCTP) - TODO
 
 * ServerSCTP()
+* topics - dict with lists of publishers and subscribers bound to certain topic.
 
-## ClientSCTP - TODO
+## ClientMQTT (BaseSCTP) - TODO
 
 * ClientSCTP() - create instance, af_family, srv_address, srv_port
