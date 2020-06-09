@@ -4,8 +4,7 @@ using namespace std;
 
 int main()
 {
-	MQTTBroker mqtt_broker(7769, AF_INET);
-	printf("mqtt_base values: BROKER_PORT: %d\n", BROKER_PORT);
-	printf("service mqtt: %d\n", mqtt_broker.getService());
+	MQTTBroker mqtt_broker(7733, AF_INET);
+	mqtt_broker.start_processing();
 	return 0;
 }

@@ -15,12 +15,6 @@ MQTTBroker::MQTTBroker()
 		fprintf(stderr, "prepare_server error!\n");
 		exit(1);
 	}
-
-	if (set_options() == 1)
-	{
-		fprintf(stderr, "set_options error!\n");
-		exit(1);
-	}
 }
 
 // Parametrized constructor
@@ -32,12 +26,6 @@ MQTTBroker::MQTTBroker(int _service, int _af_family)
 	if (prepare_server() == 1)
 	{
 		fprintf(stderr, "prepare_server error!\n");
-		exit(1);
-	}
-
-	if (set_options() == 1)
-	{
-		fprintf(stderr, "set_options error!\n");
 		exit(1);
 	}
 }
@@ -67,8 +55,20 @@ int MQTTBroker::prepare_server()
 		return 1;
 	}
 
+	if (set_options() == 1)
+	{
+		fprintf(stderr, "set_options error!\n");
+		exit(1);
+	}
+
+	if (listen_msg() == 1)
+	{
+		fprintf(stderr, "listen error!\n");
+		exit(1);
+	}
+
 	printf("Server prepared!\n");
-	return 0;
+	return 0; 
 }
 
 int MQTTBroker::set_options()
@@ -94,6 +94,54 @@ int MQTTBroker::listen_msg()
 		return 1;
 	}
 
+	return 0;
+}
+
+int MQTTBroker::add_to_topics(struct mqtt_msg* msg, struct sctp_sndrcvinfo *sri)
+{
+	if ( topics.find(msg->topic) == topics.end())
+	{
+		topics[msg->topic] = vector<vector<struct sctp_sndrcvinfo> > (2); // Initialize  
+		topics[msg->topic][SUBSCRIBER] = vector<struct sctp_sndrcvinfo> (); 
+		topics[msg->topic][PUBLISHER] = vector<struct sctp_sndrcvinfo> (); 
+		printf("New entries for topic: %s:\n", msg->topic.c_str());
+	}
+
+	topics[msg->topic][msg->cli_type].push_back(*sri);
+	return 0;
+}
+
+int MQTTBroker::recv_mqtt()
+{
+	struct mqtt_msg msg;
+	struct sctp_sndrcvinfo sri;
+
+	if (sctp_recvmsg(sock_fd, &msg, sizeof(struct mqtt_msg), NULL, NULL,
+				&sri, NULL) == -1) 
+	{
+		fprintf(stderr,"sctp_recvmsg error : %s\n", strerror(errno));
+		return -1;
+	}
+
+	if (msg.msg_type == INIT)
+	{
+		add_to_topics(&msg, &sri);
+	}
+	return 0;
+}
+
+int MQTTBroker::send_mqtt()
+{
+	return 0;
+}
+
+int MQTTBroker::start_processing()
+{
+	printf("MQTTBroker is running on port: %d.\n", this->service);
+	while(true){
+		recv_mqtt();
+	}
+	
 	return 0;
 }
 
