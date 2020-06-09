@@ -32,9 +32,9 @@ public:
 		service = 7733;
 		af_family = AF_INET;
 
-		if (prepare_socket() == 1)
+		if (prepare_server() == 1)
 		{
-			fprintf(stderr, "prepare_socket error!\n");
+			fprintf(stderr, "prepare_server error!\n");
 			exit(1);
 		}
 	}
@@ -45,9 +45,9 @@ public:
 		service = _service;
 		af_family = _af_family;
 
-		if (prepare_socket() == 1)
+		if (prepare_server() == 1)
 		{
-			fprintf(stderr, "prepare_socket error!\n");
+			fprintf(stderr, "prepare_server error!\n");
 			exit(1);
 		}
 
@@ -58,8 +58,31 @@ public:
 		}
 	}
 
-private:
-	int prepare_socket()
+protected:
+	int prepare_server()
+	{
+		if ((sock_fd = socket(af_family, SOCK_SEQPACKET, IPPROTO_SCTP)) == -1)
+		{
+			fprintf(stderr, "socket error : %s\n", strerror(errno));
+			return 1;
+		}
+
+		// Prepare local address structure
+		bzero(&local_addr, sizeof(local_addr));
+		local_addr.sin_family = af_family;
+		local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+		local_addr.sin_port = htons(service);
+
+		if (bind(sock_fd, (SA *)&local_addr, sizeof(local_addr)) == -1)
+		{
+			fprintf(stderr, "bind error : %s\n", strerror(errno));
+			return 1;
+		}
+
+		return 0;
+	}
+
+	int prepare_client()
 	{
 		if ((sock_fd = socket(af_family, SOCK_SEQPACKET, IPPROTO_SCTP)) == -1)
 		{
