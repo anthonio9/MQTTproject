@@ -17,8 +17,6 @@
 #include <vector>
 #include <unordered_map>
 
-
-
 // CLIENT TYPES
 const int PUBLISHER = 0;
 const int SUBSCRIBER = 1;
@@ -44,7 +42,6 @@ struct mqtt_msg {
 	char data[100];			// array containing message.
 	size_t data_len;		// length of message.
 };
-
 
 class MQTTBroker
 {
@@ -76,6 +73,34 @@ protected:
 
 public:
 	int start_processing();
+};
+
+class MQTTClient
+{
+protected:
+	int sock_fd, service, af_family, addr_len;
+	struct sockaddr_in local_addr, broker_addr;
+	struct sctp_sndrcvinfo sri;
+	struct sctp_event_subscribe evnts;
+	struct mqtt_msg msg;
+	char readbuf[BUFFSIZE];
+	size_t rd_sz;
+	char broker_ip[100];
+
+public:
+	// Default constructor
+	MQTTClient();
+
+	// Parametrized constructor
+	MQTTClient(char *_broker_ip, size_t ip_len, int _service, int _af_family);
+
+protected:
+	int prepare_client();
+	int set_options();
+	int recv_mqtt();
+
+public:
+	int send_mqtt();
 };
 
 #endif
