@@ -25,7 +25,7 @@ const int SUBSCRIBER = 1;
 
 // MSG TYPES
 const int INIT = 11;
-const int MSG = 12;
+const int DATA = 12;
 
 // BROKER DEFAULT PORT
 const int BROKER_PORT = 7733;
@@ -38,7 +38,7 @@ const int BROKER_PORT2 = 7734;
 // COMMON MESSAGE
 struct mqtt_msg {
 	int cli_type;			// constant int SUBSCRIBER or PUBLISHER.
-	int msg_type;			// constant int INIT or MSG
+	int msg_type;			// constant int INIT or DATA
 	char topic[20]; 		// name of subscribed topic.
 	size_t topic_len; 		// size of topic.
 	char data[100];			// array containing message.
@@ -51,11 +51,12 @@ class MQTTBroker
 protected:
 	int sock_fd, service, af_family;
 	struct sockaddr_in local_addr, remote_addr;
-	struct sctp_sndrcvinfo sri;
 	struct sctp_event_subscribe evnts;
+	struct mqtt_msg msg;
+	struct sctp_sndrcvinfo sri;
 	char readbuf[BUFFSIZE];
 	size_t rd_sz;
-	std::unordered_map<std::string, std::vector<struct sctp_sndrcvinfo>> topics; 
+	std::unordered_map<std::string, std::vector<std::vector<struct sctp_sndrcvinfo>> > topics; 
 public:
 	// Default constructor
 	MQTTBroker();
@@ -68,7 +69,13 @@ protected:
 	int prepare_server();
 	int set_options();
 	int listen_msg();
+	int add_to_topics(struct sctp_sndrcvinfo* sri, struct mqtt_msg *msg_tmp, size_t msg_tmp_len);
+	int notify_subscribers();
+	int recv_mqtt();
+	int send_mqtt();
 
+public:
+	int start_processing();
 };
 
 #endif
