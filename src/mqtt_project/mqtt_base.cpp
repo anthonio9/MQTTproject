@@ -14,12 +14,6 @@ MQTTBroker::MQTTBroker()
 		fprintf(stderr, "prepare_server error!\n");
 		exit(1);
 	}
-
-	if (set_options() == 1)
-	{
-		fprintf(stderr, "set_options error!\n");
-		exit(1);
-	}
 }
 
 // Parametrized constructor
@@ -31,12 +25,6 @@ MQTTBroker::MQTTBroker(int _service, int _af_family)
 	if (prepare_server() == 1)
 	{
 		fprintf(stderr, "prepare_server error!\n");
-		exit(1);
-	}
-
-	if (set_options() == 1)
-	{
-		fprintf(stderr, "set_options error!\n");
 		exit(1);
 	}
 }
@@ -66,8 +54,20 @@ int MQTTBroker::prepare_server()
 		return 1;
 	}
 
+	if (set_options() == 1)
+	{
+		fprintf(stderr, "set_options error!\n");
+		exit(1);
+	}
+
+	if (listen_msg() == 1)
+	{
+		fprintf(stderr, "listen error!\n");
+		exit(1);
+	}
+
 	printf("Server prepared!\n");
-	return 0;
+	return 0; 
 }
 
 int MQTTBroker::set_options()
@@ -94,6 +94,85 @@ int MQTTBroker::listen_msg()
 
 	return 0;
 }
+
+int MQTTBroker::add_to_topics()
+{
+	//char topic_buff[msg.topic_len];
+	//strncpy(topic_buff, msg.topic, msg.topic_len);
+	//string topic_tmp(topic_buff);
+	string topic_tmp(msg.topic);
+
+	if (topics.empty() || topics.find(topic_tmp) == topics.end())
+	{
+		topics[topic_tmp] = vector<vector<struct sctp_sndrcvinfo> > (2); // Initialize  
+		topics[topic_tmp][SUBSCRIBER] = vector<struct sctp_sndrcvinfo> (); 
+		topics[topic_tmp][PUBLISHER] = vector<struct sctp_sndrcvinfo> (); 
+		printf("New entries for topic: %s:\n", topic_tmp.c_str());
+	}
+
+	topics[topic_tmp][msg.cli_type].push_back(sri);
+	return 0;
+}
+
+int MQTTBroker::notify_subscribers()
+{
+	string topic_tmp(msg.topic);
+	if (topics.empty() || topics.find(topic_tmp) == topics.end()){
+		fprintf(stderr, "notify_subscribers: no topic: %s!!!\n", topic_tmp.c_str());
+		return 1;
+	}
+
+	for(struct sctp_sndrcvinfo sri : topics[topic_tmp][PUBLISHER])
+	{
+		send_mqtt(&sri, &msg, sizeof(msg));
+	}
+}
+
+int MQTTBroker::recv_mqtt()
+{
+	if (sctp_recvmsg(sock_fd, &msg, sizeof(struct mqtt_msg), NULL, NULL,
+				&sri, NULL) == -1) 
+	{
+		fprintf(stderr,"sctp_recvmsg error : %s\n", strerror(errno));
+		return -1;
+	}
+
+	if (msg.msg_type == INIT)
+	{
+		printf("Received init request.\n");
+		add_to_topics();
+	}
+
+	if (msg.msg_type == DATA && msg.cli_type == PUBLISHER)
+	{
+		printf("Received data request.\n");
+		notify_subscribers();
+	}
+
+	return 0;
+}
+
+int MQTTBroker::send_mqtt(struct sctp_sndrcvinfo* sri, struct mqtt_msg *msg_tmp, size_t msg_tmp_len)
+{
+	if( (sctp_send(sock_fd, msg_tmp, msg_tmp_len, 
+			 &sri, 0)) < 0 ){
+			fprintf(stderr,"sctp_sendmsg : %s\n", strerror(errno));
+			return 1;
+	}
+	return 0;
+}
+
+int MQTTBroker::start_processing()
+{
+	printf("MQTTBroker is running on port: %d.\n", this->service);
+	printf("Waiting for clients!\n");
+	while(true){
+		recv_mqtt();
+	}
+	
+	return 0;
+}
+
 
 MQTTClient::MQTTClient()
 {
