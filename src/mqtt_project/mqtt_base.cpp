@@ -104,7 +104,7 @@ int MQTTBroker::add_to_topics()
 	//string topic_tmp(topic_buff);
 	string topic_tmp(msg.topic);
 
-	if (!topics.empty() || topics.find(topic_tmp) == topics.end())
+	if (topics.empty() || topics.find(topic_tmp) == topics.end())
 	{
 		topics[topic_tmp] = vector<vector<struct sctp_sndrcvinfo> > (2); // Initialize  
 		topics[topic_tmp][SUBSCRIBER] = vector<struct sctp_sndrcvinfo> (); 
@@ -114,6 +114,20 @@ int MQTTBroker::add_to_topics()
 
 	topics[topic_tmp][msg.cli_type].push_back(sri);
 	return 0;
+}
+
+int MQTTBroker::notify_subscribers()
+{
+	string topic_tmp(msg.topic);
+	if (topics.empty() || topics.find(topic_tmp) == topics.end()){
+		fprintf(stderr, "notify_subscribers: no topic: %s!!!\n", topic_tmp.c_str());
+		return 1;
+	}
+
+	for(struct sctp_sndrcvinfo sri : topics[topic_tmp][PUBLISHER])
+	{
+		send_mqtt(&sri, &msg, sizeof(msg));
+	}
 }
 
 int MQTTBroker::recv_mqtt()
@@ -130,11 +144,23 @@ int MQTTBroker::recv_mqtt()
 		printf("Received init request.\n");
 		add_to_topics();
 	}
+
+	if (msg.msg_type == DATA && msg.cli_type == PUBLISHER)
+	{
+		printf("Received data request.\n");
+		notify_subscribers();
+	}
+
 	return 0;
 }
 
-int MQTTBroker::send_mqtt()
+int MQTTBroker::send_mqtt(struct sctp_sndrcvinfo* sri, struct mqtt_msg *msg_tmp, size_t msg_tmp_len)
 {
+	if( (sctp_send(sock_fd, msg_tmp, msg_tmp_len, 
+			 &sri, 0)) < 0 ){
+			fprintf(stderr,"sctp_sendmsg : %s\n", strerror(errno));
+			return 1;
+	}
 	return 0;
 }
 
