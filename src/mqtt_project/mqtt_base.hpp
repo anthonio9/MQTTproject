@@ -69,7 +69,7 @@ protected:
 	int add_to_topics();
 	int notify_subscribers();
 	int recv_mqtt();
-	int send_mqtt(struct sctp_sndrcvinfo *sri_tmp);
+	int send_mqtt(struct mqtt_msg *msg_tmp, size_t msg_len, struct sctp_sndrcvinfo *sri_tmp);
 
 public:
 	int start_processing();

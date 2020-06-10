@@ -124,7 +124,7 @@ int MQTTBroker::notify_subscribers()
 
 	for(struct sctp_sndrcvinfo sri_tmp : topics[topic_tmp][PUBLISHER])
 	{
-		send_mqtt(&sri_tmp);
+		send_mqtt(&msg, sizeof(msg), &sri_tmp);
 	}
 }
 
@@ -152,10 +152,9 @@ int MQTTBroker::recv_mqtt()
 	return 0;
 }
 
-int MQTTBroker::send_mqtt(struct sctp_sndrcvinfo *sri_tmp)
+int MQTTBroker::send_mqtt(struct mqtt_msg *msg_tmp, size_t msg_len, struct sctp_sndrcvinfo *sri_tmp)
 {
-	if( (sctp_send(sock_fd, &msg, sizeof(msg), 
-			 sri_tmp, 0)) < 0 ){
+	if( (sctp_send(sock_fd, msg_tmp, msg_len, sri_tmp, 0)) < 0 ){
 			fprintf(stderr,"sctp_sendmsg : %s\n", strerror(errno));
 			return 1;
 	}
