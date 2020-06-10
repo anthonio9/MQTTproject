@@ -39,9 +39,9 @@ const int BROKER_PORT2 = 7734;
 struct mqtt_msg {
 	int cli_type;			// constant int SUBSCRIBER or PUBLISHER.
 	int msg_type;			// constant int INIT or DATA
-	std::string topic; 		// name of subscribed topic.
+	char topic[20]; 		// name of subscribed topic.
 	size_t topic_len; 		// size of topic.
-	std::string data;			// array containing message.
+	char data[100];			// array containing message.
 	size_t data_len;		// length of message.
 };
 
@@ -52,6 +52,8 @@ protected:
 	int sock_fd, service, af_family;
 	struct sockaddr_in local_addr, remote_addr;
 	struct sctp_event_subscribe evnts;
+	struct mqtt_msg msg;
+	struct sctp_sndrcvinfo sri;
 	char readbuf[BUFFSIZE];
 	size_t rd_sz;
 	std::unordered_map<std::string, std::vector<std::vector<struct sctp_sndrcvinfo>> > topics; 
@@ -67,7 +69,7 @@ protected:
 	int prepare_server();
 	int set_options();
 	int listen_msg();
-	int add_to_topics(struct mqtt_msg* msg, struct sctp_sndrcvinfo * sri);
+	int add_to_topics();
 	int recv_mqtt();
 	int send_mqtt();
 

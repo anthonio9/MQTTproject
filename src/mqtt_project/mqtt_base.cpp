@@ -97,25 +97,27 @@ int MQTTBroker::listen_msg()
 	return 0;
 }
 
-int MQTTBroker::add_to_topics(struct mqtt_msg* msg, struct sctp_sndrcvinfo *sri)
+int MQTTBroker::add_to_topics()
 {
-	if ( topics.find(msg->topic) == topics.end())
+	//char topic_buff[msg.topic_len];
+	//strncpy(topic_buff, msg.topic, msg.topic_len);
+	//string topic_tmp(topic_buff);
+	string topic_tmp(msg.topic);
+
+	if (!topics.empty() || topics.find(topic_tmp) == topics.end())
 	{
-		topics[msg->topic] = vector<vector<struct sctp_sndrcvinfo> > (2); // Initialize  
-		topics[msg->topic][SUBSCRIBER] = vector<struct sctp_sndrcvinfo> (); 
-		topics[msg->topic][PUBLISHER] = vector<struct sctp_sndrcvinfo> (); 
-		printf("New entries for topic: %s:\n", msg->topic.c_str());
+		topics[topic_tmp] = vector<vector<struct sctp_sndrcvinfo> > (2); // Initialize  
+		topics[topic_tmp][SUBSCRIBER] = vector<struct sctp_sndrcvinfo> (); 
+		topics[topic_tmp][PUBLISHER] = vector<struct sctp_sndrcvinfo> (); 
+		printf("New entries for topic: %s:\n", topic_tmp.c_str());
 	}
 
-	topics[msg->topic][msg->cli_type].push_back(*sri);
+	topics[topic_tmp][msg.cli_type].push_back(sri);
 	return 0;
 }
 
 int MQTTBroker::recv_mqtt()
 {
-	struct mqtt_msg msg;
-	struct sctp_sndrcvinfo sri;
-
 	if (sctp_recvmsg(sock_fd, &msg, sizeof(struct mqtt_msg), NULL, NULL,
 				&sri, NULL) == -1) 
 	{
@@ -125,7 +127,8 @@ int MQTTBroker::recv_mqtt()
 
 	if (msg.msg_type == INIT)
 	{
-		add_to_topics(&msg, &sri);
+		printf("Received init request.\n");
+		add_to_topics();
 	}
 	return 0;
 }
@@ -138,6 +141,7 @@ int MQTTBroker::send_mqtt()
 int MQTTBroker::start_processing()
 {
 	printf("MQTTBroker is running on port: %d.\n", this->service);
+	printf("Waiting for clients!\n");
 	while(true){
 		recv_mqtt();
 	}
