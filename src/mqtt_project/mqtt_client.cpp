@@ -5,11 +5,13 @@ using namespace std;
 int main()
 {
     char ip_addr[] = "192.168.1.18";
-    char topic[] = "temat";
+    char topic[] = "tematNatalii";
     char data[] = "Hej Antos";
     MQTTClient mqtt_client(ip_addr, sizeof(ip_addr), 7733, AF_INET);
-    mqtt_client.subscribe(topic);
-    mqtt_client.listen();
+    mqtt_client.subscribe(topic, sizeof(topic));
+    printf("sub\n");
+    mqtt_client.recv_mqtt();
+    printf("recv\n");
 
     return 0;
 }

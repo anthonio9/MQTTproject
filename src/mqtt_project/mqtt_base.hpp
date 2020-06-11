@@ -99,14 +99,14 @@ public:
 protected:
 	int prepare_client();
 	int set_options();
-	int recv_mqtt();
 
 public:
 	int send_mqtt();
+	int recv_mqtt();
 	// publisher
-	int publish(char *topic, char *data);
+	int publish(char *topic, size_t topic_len, char *data, size_t data_len);
 	// subscriber
-	int subscribe(char *topic);
+	int subscribe(char *topic, size_t topic_len);
 	int listen();
 	int unsubscribe();
 };

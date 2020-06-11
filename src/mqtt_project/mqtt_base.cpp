@@ -282,23 +282,27 @@ int MQTTClient::recv_mqtt()
 {
 	struct mqtt_msg msg;
 
+	printf("start nasluchania 1\n");
+
 	if (recv(sock_fd, &msg, sizeof(msg), 0) == -1)
 	{
 		fprintf(stderr, "sctp_recvmsg error : %s\n", strerror(errno));
 		return 1;
 	}
 
-	printf("%s %s %s %s %s %s", msg.cli_type, msg.msg_type, msg.topic, msg.topic_len, msg.data, msg.data_len);
+	printf("start nasluchania\n");
+
+	printf("received message data: %d %d %s %ld %s %ld\n", msg.cli_type, msg.msg_type, msg.topic, msg.topic_len, msg.data, msg.data_len);
 	return 0;
 }
 
-int MQTTClient::publish(char *topic, char *data)
+int MQTTClient::publish(char *topic, size_t topic_len, char *data, size_t data_len)
 {
 	msg.cli_type = PUBLISHER;
 	msg.msg_type = DATA;
-	strncpy(msg.topic, topic, sizeof(topic));
+	strncpy(msg.topic, topic, topic_len);
 	msg.topic_len = sizeof(msg.topic);
-	strncpy(msg.data, data, sizeof(data));
+	strncpy(msg.data, data, data_len);
 	msg.data_len = sizeof(msg.data);
 
 	if (sendto(sock_fd, &msg, sizeof(msg), 0, (SA *)&broker_addr, sizeof(broker_addr)) == -1)
@@ -312,11 +316,11 @@ int MQTTClient::publish(char *topic, char *data)
 	return 0;
 }
 
-int MQTTClient::subscribe(char *topic)
+int MQTTClient::subscribe(char *topic, size_t topic_len)
 {
 	msg.cli_type = SUBSCRIBER;
 	msg.msg_type = INIT;
-	strncpy(msg.topic, topic, sizeof(topic));
+	strncpy(msg.topic, topic, topic_len);
 	msg.topic_len = sizeof(msg.topic);
 	//strncpy(msg.data, data, sizeof(data));
 	//msg.data_len = sizeof(msg.data);
