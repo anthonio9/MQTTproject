@@ -104,9 +104,9 @@ protected:
 public:
 	int send_mqtt();
 	// publisher
-	int publish();
+	int publish(char *topic, char *data);
 	// subscriber
-	int subscribe();
+	int subscribe(char *topic);
 	int listen();
 	int unsubscribe();
 };

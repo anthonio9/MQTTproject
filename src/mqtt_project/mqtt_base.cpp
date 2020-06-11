@@ -259,7 +259,7 @@ int MQTTClient::set_options()
 int MQTTClient::send_mqtt()
 {
 	char topic[] = "topic1";
-	char data[] = "Wiadomość do Antoniego od Natalii";
+	// char data[] = "Wiadomość do Antoniego od Natalii";
 
 	msg.cli_type = PUBLISHER;
 	msg.msg_type = INIT;
@@ -279,6 +279,67 @@ int MQTTClient::send_mqtt()
 }
 
 int MQTTClient::recv_mqtt()
+{
+	struct mqtt_msg msg;
+
+	if (recv(sock_fd, &msg, sizeof(msg), 0) == -1)
+	{
+		fprintf(stderr, "sctp_recvmsg error : %s\n", strerror(errno));
+		return 1;
+	}
+
+	printf("%s %s %s %s %s %s", msg.cli_type, msg.msg_type, msg.topic, msg.topic_len, msg.data, msg.data_len);
+	return 0;
+}
+
+int MQTTClient::publish(char *topic, char *data)
+{
+	msg.cli_type = PUBLISHER;
+	msg.msg_type = DATA;
+	strncpy(msg.topic, topic, sizeof(topic));
+	msg.topic_len = sizeof(msg.topic);
+	strncpy(msg.data, data, sizeof(data));
+	msg.data_len = sizeof(msg.data);
+
+	if (sendto(sock_fd, &msg, sizeof(msg), 0, (SA *)&broker_addr, sizeof(broker_addr)) == -1)
+	{
+		fprintf(stderr, "sendto error : %s\n", strerror(errno));
+		return 1;
+	}
+
+	printf("published data: %s to topic: %s\n", msg.data, msg.topic);
+
+	return 0;
+}
+
+int MQTTClient::subscribe(char *topic)
+{
+	msg.cli_type = SUBSCRIBER;
+	msg.msg_type = INIT;
+	strncpy(msg.topic, topic, sizeof(topic));
+	msg.topic_len = sizeof(msg.topic);
+	//strncpy(msg.data, data, sizeof(data));
+	//msg.data_len = sizeof(msg.data);
+
+	if (sendto(sock_fd, &msg, sizeof(msg), 0, (SA *)&broker_addr, sizeof(broker_addr)) == -1)
+	{
+		fprintf(stderr, "sendto error : %s\n", strerror(errno));
+		return 1;
+	}
+
+	printf("subscribed to topic: %s\n", msg.topic);
+
+	return 0;
+}
+
+int MQTTClient::listen()
+{
+	recv_mqtt();
+
+	return 0;
+}
+
+int MQTTClient::unsubscribe()
 {
 	return 0;
 }
