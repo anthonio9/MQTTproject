@@ -6,21 +6,24 @@
 !_TAG_PROGRAM_VERSION	5.8	//
 BROKER_PORT	mqtt_base.hpp	/^const int BROKER_PORT = 7733;$/;"	v
 BROKER_PORT2	mqtt_base.hpp	/^const int BROKER_PORT2 = 7734;$/;"	v
-BUFFSIZE	mqtt_base.hpp	36;"	d
+BUFFSIZE	mqtt_base.hpp	34;"	d
 CC	Makefile	/^CC=g++$/;"	m
 CFLAGS	Makefile	/^CFLAGS=-I. -lsctp -std=c++11 -Wall -Wextra$/;"	m
 DATA	mqtt_base.hpp	/^const int DATA = 12;$/;"	v
 INIT	mqtt_base.hpp	/^const int INIT = 11;$/;"	v
 LIB	Makefile	/^LIB=mqtt_base.cpp$/;"	m
-LISTENQ	mqtt_base.hpp	35;"	d
+LISTENQ	mqtt_base.hpp	33;"	d
 MAXLINE	mqtt_test_client.cpp	17;"	d	file:
 MAXLINE2	mqtt_test_client.cpp	18;"	d	file:
 MQTTBroker	mqtt_base.cpp	/^MQTTBroker::MQTTBroker()$/;"	f	class:MQTTBroker
 MQTTBroker	mqtt_base.cpp	/^MQTTBroker::MQTTBroker(int _service, int _af_family)$/;"	f	class:MQTTBroker
 MQTTBroker	mqtt_base.hpp	/^class MQTTBroker$/;"	c
-OBJECTS	Makefile	/^OBJECTS = mqtt_example mqtt_test_client$/;"	m
+MQTTClient	mqtt_base.cpp	/^MQTTClient::MQTTClient()$/;"	f	class:MQTTClient
+MQTTClient	mqtt_base.cpp	/^MQTTClient::MQTTClient(char *_broker_ip, size_t ip_len, int _service, int _af_family)$/;"	f	class:MQTTClient
+MQTTClient	mqtt_base.hpp	/^class MQTTClient$/;"	c
+OBJECTS	Makefile	/^OBJECTS = mqtt_example mqtt_client mqtt_test_client$/;"	m
 PUBLISHER	mqtt_base.hpp	/^const int PUBLISHER = 0;$/;"	v
-SA	mqtt_base.hpp	34;"	d
+SA	mqtt_base.hpp	32;"	d
 SA	mqtt_test_client.cpp	16;"	d	file:
 SCTP_MAXLINE	mqtt_test_client.cpp	20;"	d	file:
 SERV_MAX_SCTP_STRM	mqtt_test_client.cpp	21;"	d	file:
@@ -29,30 +32,47 @@ SERV_PORT	mqtt_test_client.cpp	19;"	d	file:
 SUBSCRIBER	mqtt_base.hpp	/^const int SUBSCRIBER = 1;$/;"	v
 _MQTT_BASE_H	mqtt_base.hpp	8;"	d
 add_to_topics	mqtt_base.cpp	/^int MQTTBroker::add_to_topics()$/;"	f	class:MQTTBroker
+addr_len	mqtt_base.hpp	/^	int sock_fd, service, af_family, addr_len;$/;"	m	class:MQTTClient
+af_family	mqtt_base.hpp	/^	int sock_fd, service, af_family, addr_len;$/;"	m	class:MQTTClient
 af_family	mqtt_base.hpp	/^	int sock_fd, service, af_family;$/;"	m	class:MQTTBroker
+broker_addr	mqtt_base.hpp	/^	struct sockaddr_in local_addr, broker_addr;$/;"	m	class:MQTTClient	typeref:struct:MQTTClient::
+broker_ip	mqtt_base.hpp	/^	char broker_ip[100];$/;"	m	class:MQTTClient
 cli_type	mqtt_base.hpp	/^	int cli_type;			\/\/ constant int SUBSCRIBER or PUBLISHER.$/;"	m	struct:mqtt_msg
 data	mqtt_base.hpp	/^	char data[100];			\/\/ array containing message.$/;"	m	struct:mqtt_msg
 data_len	mqtt_base.hpp	/^	size_t data_len;		\/\/ length of message.$/;"	m	struct:mqtt_msg
 evnts	mqtt_base.hpp	/^	struct sctp_event_subscribe evnts;$/;"	m	class:MQTTBroker	typeref:struct:MQTTBroker::sctp_event_subscribe
+evnts	mqtt_base.hpp	/^	struct sctp_event_subscribe evnts;$/;"	m	class:MQTTClient	typeref:struct:MQTTClient::sctp_event_subscribe
 getService	mqtt_base.cpp	/^int MQTTBroker::getService()$/;"	f	class:MQTTBroker
 listen_msg	mqtt_base.cpp	/^int MQTTBroker::listen_msg()$/;"	f	class:MQTTBroker
+local_addr	mqtt_base.hpp	/^	struct sockaddr_in local_addr, broker_addr;$/;"	m	class:MQTTClient	typeref:struct:MQTTClient::sockaddr_in
 local_addr	mqtt_base.hpp	/^	struct sockaddr_in local_addr, remote_addr;$/;"	m	class:MQTTBroker	typeref:struct:MQTTBroker::sockaddr_in
+main	mqtt_client.cpp	/^int main()$/;"	f
 main	mqtt_example.cpp	/^int main()$/;"	f
 main	mqtt_test_client.cpp	/^int main()$/;"	f
 mqtt_msg	mqtt_base.hpp	/^struct mqtt_msg {$/;"	s
 msg	mqtt_base.hpp	/^	struct mqtt_msg msg;$/;"	m	class:MQTTBroker	typeref:struct:MQTTBroker::mqtt_msg
+msg	mqtt_base.hpp	/^	struct mqtt_msg msg;$/;"	m	class:MQTTClient	typeref:struct:MQTTClient::mqtt_msg
 msg_type	mqtt_base.hpp	/^	int msg_type;			\/\/ constant int INIT or DATA$/;"	m	struct:mqtt_msg
 notify_subscribers	mqtt_base.cpp	/^int MQTTBroker::notify_subscribers()$/;"	f	class:MQTTBroker
+prepare_client	mqtt_base.cpp	/^int MQTTClient::prepare_client()$/;"	f	class:MQTTClient
 prepare_server	mqtt_base.cpp	/^int MQTTBroker::prepare_server()$/;"	f	class:MQTTBroker
 rd_sz	mqtt_base.hpp	/^	size_t rd_sz;$/;"	m	class:MQTTBroker
+rd_sz	mqtt_base.hpp	/^	size_t rd_sz;$/;"	m	class:MQTTClient
 readbuf	mqtt_base.hpp	/^	char readbuf[BUFFSIZE];$/;"	m	class:MQTTBroker
+readbuf	mqtt_base.hpp	/^	char readbuf[BUFFSIZE];$/;"	m	class:MQTTClient
 recv_mqtt	mqtt_base.cpp	/^int MQTTBroker::recv_mqtt()$/;"	f	class:MQTTBroker
+recv_mqtt	mqtt_base.cpp	/^int MQTTClient::recv_mqtt()$/;"	f	class:MQTTClient
 remote_addr	mqtt_base.hpp	/^	struct sockaddr_in local_addr, remote_addr;$/;"	m	class:MQTTBroker	typeref:struct:MQTTBroker::
-send_mqtt	mqtt_base.cpp	/^int MQTTBroker::send_mqtt(struct sctp_sndrcvinfo* sri, struct mqtt_msg *msg_tmp)$/;"	f	class:MQTTBroker
+send_mqtt	mqtt_base.cpp	/^int MQTTBroker::send_mqtt(struct mqtt_msg *msg_tmp, size_t msg_len, struct sctp_sndrcvinfo *sri_tmp)$/;"	f	class:MQTTBroker
+send_mqtt	mqtt_base.cpp	/^int MQTTClient::send_mqtt()$/;"	f	class:MQTTClient
+service	mqtt_base.hpp	/^	int sock_fd, service, af_family, addr_len;$/;"	m	class:MQTTClient
 service	mqtt_base.hpp	/^	int sock_fd, service, af_family;$/;"	m	class:MQTTBroker
 set_options	mqtt_base.cpp	/^int MQTTBroker::set_options()$/;"	f	class:MQTTBroker
+set_options	mqtt_base.cpp	/^int MQTTClient::set_options()$/;"	f	class:MQTTClient
+sock_fd	mqtt_base.hpp	/^	int sock_fd, service, af_family, addr_len;$/;"	m	class:MQTTClient
 sock_fd	mqtt_base.hpp	/^	int sock_fd, service, af_family;$/;"	m	class:MQTTBroker
 sri	mqtt_base.hpp	/^	struct sctp_sndrcvinfo sri;$/;"	m	class:MQTTBroker	typeref:struct:MQTTBroker::sctp_sndrcvinfo
+sri	mqtt_base.hpp	/^	struct sctp_sndrcvinfo sri;$/;"	m	class:MQTTClient	typeref:struct:MQTTClient::sctp_sndrcvinfo
 start_processing	mqtt_base.cpp	/^int MQTTBroker::start_processing()$/;"	f	class:MQTTBroker
 topic	mqtt_base.hpp	/^	char topic[20]; 		\/\/ name of subscribed topic.$/;"	m	struct:mqtt_msg
 topic_len	mqtt_base.hpp	/^	size_t topic_len; 		\/\/ size of topic.$/;"	m	struct:mqtt_msg

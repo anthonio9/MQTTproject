@@ -104,29 +104,38 @@ int MQTTBroker::add_to_topics()
 
 	if (topics.empty() || topics.find(topic_tmp) == topics.end())
 	{
-		topics[topic_tmp] = vector<vector<struct sctp_sndrcvinfo>>(2); // Initialize
-		topics[topic_tmp][SUBSCRIBER] = vector<struct sctp_sndrcvinfo>();
-		topics[topic_tmp][PUBLISHER] = vector<struct sctp_sndrcvinfo>();
-		printf("New entries for topic: %s:\n", topic_tmp.c_str());
+		topics[topic_tmp] = vector<vector<struct sctp_sndrcvinfo> > (2); // Initialize  
+		topics[topic_tmp][SUBSCRIBER] = vector<struct sctp_sndrcvinfo> (); 
+		topics[topic_tmp][PUBLISHER] = vector<struct sctp_sndrcvinfo> (); 
+		printf("New topic: %s.\n", topic_tmp.c_str());
 	}
 
 	topics[topic_tmp][msg.cli_type].push_back(sri);
+
+	if (msg.cli_type == SUBSCRIBER)
+		printf("New topic entry: SUBSCRIBER\n");
+	else
+		printf("New topic entry: PUBLISHER\n");
 	return 0;
 }
 
 int MQTTBroker::notify_subscribers()
 {
+	printf("Notifying subscribers on topic: %s", msg.topic);
 	string topic_tmp(msg.topic);
-	if (topics.empty() || topics.find(topic_tmp) == topics.end())
-	{
-		fprintf(stderr, "notify_subscribers: no topic: %s!!!\n", topic_tmp.c_str());
+
+	if (topics.empty() || topics.find(topic_tmp) == topics.end()){
+		fprintf(stderr, "error: notify_subscribers, no topic: %s!!!\n", topic_tmp.c_str());
 		return 1;
 	}
 
-	for (struct sctp_sndrcvinfo sri_tmp : topics[topic_tmp][PUBLISHER])
+	for(struct sctp_sndrcvinfo sri_tmp : topics[topic_tmp][SUBSCRIBER])
 	{
 		send_mqtt(&msg, sizeof(msg), &sri_tmp);
+		printf("Subscriber on topic: %s notified!\n", topic_tmp.c_str());
 	}
+
+	return 0;
 }
 
 int MQTTBroker::recv_mqtt()
@@ -146,8 +155,23 @@ int MQTTBroker::recv_mqtt()
 
 	if (msg.msg_type == DATA && msg.cli_type == PUBLISHER)
 	{
-		printf("Received data request.\n");
-		notify_subscribers();
+		printf("Received data request on topic: %s\n", msg.topic);
+		//notify_subscribers();
+		printf("Notifying subscribers on topic: %s\n", msg.topic);
+		string topic_tmp(msg.topic);
+
+		if (topics.empty() || topics.find(topic_tmp) == topics.end()){
+			fprintf(stderr, "error: notify_subscribers, no topic: %s!!!\n", topic_tmp.c_str());
+			return 1;
+		}
+
+		for(struct sctp_sndrcvinfo sri_tmp : topics[topic_tmp][SUBSCRIBER])
+		{
+			send_mqtt(&msg, sizeof(msg), &sri_tmp);
+			printf("Subscriber on topic: %s notified!\n", topic_tmp.c_str());
+		}
+
+		return 0;
 	}
 
 	return 0;

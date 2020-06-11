@@ -62,7 +62,6 @@ public:
 
 	// Parametrized constructor
 	MQTTBroker(int _service, int _af_family);
-	int getService();
 
 protected:
 	int prepare_server();
@@ -74,6 +73,7 @@ protected:
 	int send_mqtt(struct mqtt_msg *msg_tmp, size_t msg_len, struct sctp_sndrcvinfo *sri_tmp);
 
 public:
+	int getService();
 	int start_processing();
 };
 
