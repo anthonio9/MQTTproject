@@ -67,7 +67,7 @@ int MQTTBroker::prepare_server()
 	}
 
 	printf("Server prepared!\n");
-	return 0; 
+	return 0;
 }
 
 int MQTTBroker::set_options()
@@ -104,9 +104,9 @@ int MQTTBroker::add_to_topics()
 
 	if (topics.empty() || topics.find(topic_tmp) == topics.end())
 	{
-		topics[topic_tmp] = vector<vector<struct sctp_sndrcvinfo> > (2); // Initialize  
-		topics[topic_tmp][SUBSCRIBER] = vector<struct sctp_sndrcvinfo> (); 
-		topics[topic_tmp][PUBLISHER] = vector<struct sctp_sndrcvinfo> (); 
+		topics[topic_tmp] = vector<vector<struct sctp_sndrcvinfo>>(2); // Initialize
+		topics[topic_tmp][SUBSCRIBER] = vector<struct sctp_sndrcvinfo>();
+		topics[topic_tmp][PUBLISHER] = vector<struct sctp_sndrcvinfo>();
 		printf("New entries for topic: %s:\n", topic_tmp.c_str());
 	}
 
@@ -117,12 +117,13 @@ int MQTTBroker::add_to_topics()
 int MQTTBroker::notify_subscribers()
 {
 	string topic_tmp(msg.topic);
-	if (topics.empty() || topics.find(topic_tmp) == topics.end()){
+	if (topics.empty() || topics.find(topic_tmp) == topics.end())
+	{
 		fprintf(stderr, "notify_subscribers: no topic: %s!!!\n", topic_tmp.c_str());
 		return 1;
 	}
 
-	for(struct sctp_sndrcvinfo sri_tmp : topics[topic_tmp][PUBLISHER])
+	for (struct sctp_sndrcvinfo sri_tmp : topics[topic_tmp][PUBLISHER])
 	{
 		send_mqtt(&msg, sizeof(msg), &sri_tmp);
 	}
@@ -131,9 +132,9 @@ int MQTTBroker::notify_subscribers()
 int MQTTBroker::recv_mqtt()
 {
 	if (sctp_recvmsg(sock_fd, &msg, sizeof(struct mqtt_msg), NULL, NULL,
-				&sri, NULL) == -1) 
+					 &sri, NULL) == -1)
 	{
-		fprintf(stderr,"sctp_recvmsg error : %s\n", strerror(errno));
+		fprintf(stderr, "sctp_recvmsg error : %s\n", strerror(errno));
 		return -1;
 	}
 
@@ -154,9 +155,10 @@ int MQTTBroker::recv_mqtt()
 
 int MQTTBroker::send_mqtt(struct mqtt_msg *msg_tmp, size_t msg_len, struct sctp_sndrcvinfo *sri_tmp)
 {
-	if( (sctp_send(sock_fd, msg_tmp, msg_len, sri_tmp, 0)) < 0 ){
-			fprintf(stderr,"sctp_sendmsg : %s\n", strerror(errno));
-			return 1;
+	if ((sctp_send(sock_fd, msg_tmp, msg_len, sri_tmp, 0)) < 0)
+	{
+		fprintf(stderr, "sctp_sendmsg : %s\n", strerror(errno));
+		return 1;
 	}
 	return 0;
 }
@@ -165,13 +167,13 @@ int MQTTBroker::start_processing()
 {
 	printf("MQTTBroker is running on port: %d.\n", this->service);
 	printf("Waiting for clients!\n");
-	while(true){
+	while (true)
+	{
 		recv_mqtt();
 	}
-	
+
 	return 0;
 }
-
 
 MQTTClient::MQTTClient()
 {
@@ -217,40 +219,24 @@ MQTTClient::MQTTClient(char *_broker_ip, size_t ip_len, int _service, int _af_fa
 
 int MQTTClient::prepare_client()
 {
-	// bzero(&broker_addr, sizeof(broker_addr));
+	bzero(&broker_addr, sizeof(broker_addr));
 
-	// if (inet_pton(af_family, broker_ip, &broker_addr.sin_addr) < 0)
-	// {
-	// 	fprintf(stderr, "inet_pton error for %s : %s \n", broker_ip, strerror(errno));
-	// 	return 1;
-	// }
-	// else
-	// {
-	// 	broker_addr.sin_family = af_family;
-	// 	broker_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	// 	broker_addr.sin_port = htons(service);
-	// 	addr_len = sizeof(broker_addr);
-	// 	if ((sock_fd = socket(af_family, SOCK_SEQPACKET, IPPROTO_SCTP)) <= 0)
-	// 	{
-	// 		fprintf(stderr, "socket error : %s\n", strerror(errno));
-	// 		return 1;
-	// 	}
-	// }
-	if ((sock_fd = socket(AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP)) == -1)
+	if (inet_pton(af_family, this->broker_ip, &broker_addr.sin_addr) < 0)
+	{
+		fprintf(stderr, "inet_pton error for %s : %s \n", broker_ip, strerror(errno));
+		return 1;
+	}
+
+	broker_addr.sin_family = af_family;
+	broker_addr.sin_port = htons(this->service);
+	addr_len = sizeof(broker_addr);
+
+	if ((sock_fd = socket(af_family, SOCK_SEQPACKET, IPPROTO_SCTP)) <= 0)
 	{
 		fprintf(stderr, "socket error : %s\n", strerror(errno));
 		return 1;
 	}
 
-	bzero(&broker_addr, sizeof(broker_addr));
-	broker_addr.sin_family = AF_INET;
-	broker_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	broker_addr.sin_port = htons(this->service);
-	if (inet_pton(AF_INET, this->broker_ip, &broker_addr.sin_addr) < 1)
-	{
-		fprintf(stderr, "inet_pton error \n");
-		return 1;
-	}
 	printf("Client prepared!\n");
 	return 0;
 }

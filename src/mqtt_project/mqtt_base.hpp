@@ -34,13 +34,14 @@ const int BROKER_PORT2 = 7734;
 #define BUFFSIZE 2048
 
 // COMMON MESSAGE
-struct mqtt_msg {
-	int cli_type;			// constant int SUBSCRIBER or PUBLISHER.
-	int msg_type;			// constant int INIT or DATA
-	char topic[20]; 		// name of subscribed topic.
-	size_t topic_len; 		// size of topic.
-	char data[100];			// array containing message.
-	size_t data_len;		// length of message.
+struct mqtt_msg
+{
+	int cli_type;	  // constant int SUBSCRIBER or PUBLISHER.
+	int msg_type;	  // constant int INIT or DATA
+	char topic[20];	  // name of subscribed topic.
+	size_t topic_len; // size of topic.
+	char data[100];	  // array containing message.
+	size_t data_len;  // length of message.
 };
 
 class MQTTBroker
@@ -53,7 +54,8 @@ protected:
 	struct sctp_sndrcvinfo sri;
 	char readbuf[BUFFSIZE];
 	size_t rd_sz;
-	std::unordered_map<std::string, std::vector<std::vector<struct sctp_sndrcvinfo>> > topics; 
+	std::unordered_map<std::string, std::vector<std::vector<struct sctp_sndrcvinfo>>> topics;
+
 public:
 	// Default constructor
 	MQTTBroker();
@@ -101,6 +103,12 @@ protected:
 
 public:
 	int send_mqtt();
+	// publisher
+	int publish();
+	// subscriber
+	int subscribe();
+	int listen();
+	int unsubscribe();
 };
 
 #endif
