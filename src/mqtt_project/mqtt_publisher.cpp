@@ -4,7 +4,7 @@ using namespace std;
 
 int main()
 {
-    char ip_addr[] = "192.168.1.18";
+    char ip_addr[] = "127.0.0.1";
     char topic[] = "tematNatalii";
     char data[] = "Hej Antos";
     MQTTClient mqtt_client(ip_addr, sizeof(ip_addr), 7733, AF_INET);
