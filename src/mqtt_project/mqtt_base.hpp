@@ -100,6 +100,7 @@ protected:
 	char readbuf[BUFFSIZE];
 	size_t rd_sz;
 	char broker_ip[100];
+	void (*callback)(struct mqtt_msg*);
 
 public:
 	// Default constructor
@@ -118,7 +119,7 @@ public:
 	// publisher
 	int publish(char *topic, size_t topic_len, char *data, size_t data_len);
 	// subscriber
-	int subscribe(char *topic, size_t topic_len);
+	int subscribe(char *topic, size_t topic_len, void (*callback)(struct mqtt_msg*));
 	int listen();
 	int unsubscribe();
 };
