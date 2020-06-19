@@ -5,10 +5,10 @@ using namespace std;
 int main()
 {
     char ip_addr[] = "127.0.0.1";
-    char topic[] = "tematNatalii";
-    char data[] = "Hej Antos";
+    char topic[] = "Natalie's topic";
+    char data[] = "Hey Anthonio!";
+
     MQTTClient mqtt_client(ip_addr, sizeof(ip_addr), 7733, AF_INET);
     mqtt_client.publish(topic, sizeof(topic), data, sizeof(data));
-
     return 0;
 }

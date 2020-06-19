@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <functional>
 
 // CLIENT TYPES
 const int PUBLISHER = 0;
@@ -44,10 +45,18 @@ struct mqtt_msg
 	size_t data_len;  // length of message.
 };
 
+// sctp utilities
+char *sock_ntop(const struct sockaddr *sa, socklen_t salen);
+sctp_assoc_t sctp_address_to_associd(int sock_fd, struct sockaddr *sa, socklen_t salen, sctp_assoc_t assoc_id);
+int sctp_get_no_strms(int sock_fd, sctp_assoc_t assoc_id);
+int sctp_get_no_strms2(int sock_fd, sctp_assoc_t assoc_id);
+void print_notification(char *notify_buf);
+
+
 class MQTTBroker
 {
 protected:
-	int sock_fd, service, af_family;
+	int sock_fd, service, af_family, msg_flags;
 	struct sockaddr_in local_addr, remote_addr;
 	struct sctp_event_subscribe evnts;
 	struct mqtt_msg msg;
@@ -55,6 +64,7 @@ protected:
 	char readbuf[BUFFSIZE];
 	size_t rd_sz;
 	std::unordered_map<std::string, std::vector<std::vector<struct sctp_sndrcvinfo>>> topics;
+	std::unordered_map<sctp_assoc_t, std::vector<std::string>> sub_assocs;
 
 public:
 	// Default constructor
@@ -67,8 +77,11 @@ protected:
 	int prepare_server();
 	int set_options();
 	int listen_msg();
-	int add_to_topics();
-	int notify_subscribers();
+	int add_to_sub_assocs(struct mqtt_msg *msg_tmp, struct sctp_sndrcvinfo *sri_tmp);
+	int add_to_topics(struct mqtt_msg * msg_tmp);
+	int notify_subscribers(struct mqtt_msg *msg_tmp, size_t msg_len);
+	void print_notification(char *notify_buf);
+	int remove_subs(sctp_assoc_t assoc_id);
 	int recv_mqtt();
 	int send_mqtt(struct mqtt_msg *msg_tmp, size_t msg_len, struct sctp_sndrcvinfo *sri_tmp);
 
@@ -88,6 +101,8 @@ protected:
 	char readbuf[BUFFSIZE];
 	size_t rd_sz;
 	char broker_ip[100];
+	void (*callback)(struct mqtt_msg*);
+	std::unordered_map< std::string, std::function<void(struct mqtt_msg*)>> callbacks;
 
 public:
 	// Default constructor
@@ -99,6 +114,8 @@ public:
 protected:
 	int prepare_client();
 	int set_options();
+	int add_callback(std::string topic_name, void (*callback)(struct mqtt_msg*) );
+	int run_callback(struct mqtt_msg* msg);
 
 public:
 	int send_mqtt();
@@ -106,7 +123,7 @@ public:
 	// publisher
 	int publish(char *topic, size_t topic_len, char *data, size_t data_len);
 	// subscriber
-	int subscribe(char *topic, size_t topic_len);
+	int subscribe(char *topic, size_t topic_len, void (*callback)(struct mqtt_msg*));
 	int listen();
 	int unsubscribe();
 };
