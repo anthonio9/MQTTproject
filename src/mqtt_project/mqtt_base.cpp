@@ -622,6 +622,30 @@ int MQTTClient::publish(char *topic, size_t topic_len, char *data, size_t data_l
 	return 0;
 }
 
+int MQTTClient::add_callback(string topic_name, void (*callback)(struct mqtt_msg*) )
+{
+	if (callbacks.find(topic_name) != callbacks.end()){
+		fprintf(stderr, "error: add_callback, topic already exists: %s!!!\n", topic_name.c_str());
+		return 1;
+	}
+
+	callbacks[topic_name] = callback;
+	printf("add_callback: callback function added to topic: %s.\n", topic_name.c_str());
+	return 0;
+}
+
+int MQTTClient::run_callback(struct mqtt_msg *msg)
+{
+	string topic_tmp(msg->topic);
+	if (callbacks.empty() || callbacks.find(topic_tmp) == callbacks.end())
+	{
+		fprintf(stderr,"run_callback: no topic in stored calbacks: %s.\n", msg->topic);
+		return 1;
+	}
+
+	callbacks[topic_tmp](msg);
+}
+
 int MQTTClient::subscribe(char *topic, size_t topic_len, void (*callback_)(struct mqtt_msg*) )
 {
 	this->callback = callback_;
@@ -638,6 +662,9 @@ int MQTTClient::subscribe(char *topic, size_t topic_len, void (*callback_)(struc
 		return 1;
 	}
 
+	string topic_name(topic);
+	add_callback(topic_name, callback);
+
 	printf("subscribed to topic: %s\n", msg.topic);
 
 	return 0;
@@ -653,7 +680,8 @@ int MQTTClient::listen()
 			continue;
 		}
 
-		(*this->callback)(&msg);
+		run_callback(&msg);
+		//(*this->callback)(&msg);
 	}
 
 	return 0;

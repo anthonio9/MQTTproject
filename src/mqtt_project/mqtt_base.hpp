@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <functional>
 
 // CLIENT TYPES
 const int PUBLISHER = 0;
@@ -101,6 +102,7 @@ protected:
 	size_t rd_sz;
 	char broker_ip[100];
 	void (*callback)(struct mqtt_msg*);
+	std::unordered_map< std::string, std::function<void(struct mqtt_msg*)>> callbacks;
 
 public:
 	// Default constructor
@@ -112,6 +114,8 @@ public:
 protected:
 	int prepare_client();
 	int set_options();
+	int add_callback(std::string topic_name, void (*callback)(struct mqtt_msg*) );
+	int run_callback(struct mqtt_msg* msg);
 
 public:
 	int send_mqtt();
