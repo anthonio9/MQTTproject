@@ -118,7 +118,6 @@ protected:
 	int run_callback(struct mqtt_msg* msg);
 
 public:
-	int send_mqtt();
 	int recv_mqtt();
 	// publisher
 	int publish(char *topic, size_t topic_len, char *data, size_t data_len);

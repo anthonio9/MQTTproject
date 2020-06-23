@@ -659,28 +659,6 @@ int MQTTClient::set_options()
 	return 0;
 }
 
-int MQTTClient::send_mqtt()
-{
-	char topic[] = "topic1";
-	// char data[] = "Wiadomość do Antoniego od Natalii";
-
-	msg.cli_type = PUBLISHER;
-	msg.msg_type = INIT;
-	strncpy(msg.topic, topic, sizeof(topic));
-	msg.topic_len = sizeof(msg.topic);
-	//strncpy(msg.data, data, sizeof(data));
-	//msg.data_len = sizeof(msg.data);
-
-	if (sendto(sock_fd, &msg, sizeof(msg), 0, (SA *)&broker_addr, sizeof(broker_addr)) == -1)
-	{
-		fprintf(stderr, "sendto error : %s\n", strerror(errno));
-		return 1;
-	}
-
-	printf("msg: %s, send to: %s\n", msg.topic, this->broker_ip);
-	return 0;
-}
-
 /** 
  * Receives mqtt_msg.
  *
