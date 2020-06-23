@@ -57,17 +57,23 @@ This class is also capable of subscribing multiple topics with a callback to eac
 	Default constructor.
 + MQTTClient(char \_broker_ip,int \_service, int \_af_family) 
 	Parametrised constructor.
-+ send_mqtt()
-	Send mqtt message.
 + recv_mqtt()
-	Wait for mqtt message.
+	Receives mqtt message.
 + publish(char \*topic, size_t topic_len, char \*data, size_t data_len)
-	publish message on certain topic
-+ subscribe(char \*topic, size_t topic_len) - subscribe to certain topic
-+ listen() - start listening for messages on subscribed topics
+	Sends mqtt_msg to given topic and with given data to MQTTBroker.
++ subscribe(char \*topic, size_t topic_len, void (\*callback)(struct mqtt_msg\*)) 
+	Subscribes given topic.
++ listen()
+	start listening for messages on subscribed topics
 
 **Private:**
 
-- prepare_client() - create client socket.
-- set_options() - set socket options.
-+ add_callback
+- prepare_client() 
+	Prepare client for connecting the MQTTBroker.
+- set_options()
+	Sets socket options.
++ add_callback(std::string topic_name, void (\*callback)(struct mqtt_msg\*))
+	Adds callback to given topic.
++ run_callback(struct mqtt_msg\* msg))
+	Runs callback assigned to given message and topic.
+
