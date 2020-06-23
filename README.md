@@ -17,14 +17,16 @@ By default broker process runs on port **7733**, both on IPv4 and IPv6, however 
 * sub_assocs - dict/unordered_map associating association id with subscribed topics.
 
 ### Public
+
 + MQTTBroker()
-	default constructor,
+	default constructor.
 + MQTTBroker(int \_service, int \_af_family)
 	parametrised constructor, create instance, af_family, local_port
 + start_processing()
 	Executes the process of handling clients and their messages.
 
 ### Protected
+
 + prepare\_server() 
 	Create server socket and bind it to port and address.
 + set\_options()
