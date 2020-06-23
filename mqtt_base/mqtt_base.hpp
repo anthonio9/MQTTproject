@@ -1,8 +1,9 @@
-/* * This file is part of {{MQTTproject}}, simple MQTT implementation.  *
+/* This file is part of {{MQTTproject}}, simple MQTT implementation.
+ *
  * It's purpose is to demonstrate what we have learned on Network Programming 
  * classes. 
  *
- * This file contains basic structures and constants for use with ServerMQTT and ClientMQTT.
+ * This file contains basic structures and constants for use with MQTTBroker and MQTTClient.
  */
 #ifndef _MQTT_BASE_H
 #define _MQTT_BASE_H
@@ -86,7 +87,6 @@ protected:
 	int send_mqtt(struct mqtt_msg *msg_tmp, size_t msg_len, struct sctp_sndrcvinfo *sri_tmp);
 
 public:
-	int getService();
 	int start_processing();
 };
 
@@ -125,7 +125,6 @@ public:
 	// subscriber
 	int subscribe(char *topic, size_t topic_len, void (*callback)(struct mqtt_msg*));
 	int listen();
-	int unsubscribe();
 };
 
 #endif

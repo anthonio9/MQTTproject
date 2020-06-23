@@ -1,3 +1,15 @@
+/* This file is part of {{MQTTproject}}, simple MQTT implementation.
+ *
+ * It's purpose is to demonstrate what we have learned on Network Programming 
+ * classes. 
+ *
+ * This file contains basic structures and constants for use with MQTTBroker and MQTTClient.
+ *
+ * Developers:
+ * Antoni Jankowski
+ * Natalia Skawińska
+ */
+
 #include "mqtt_base.hpp"
 #include <string.h>
 
@@ -112,7 +124,11 @@ int sctp_get_no_strms2(int sock_fd, sctp_assoc_t assoc_id)
 }
 
 
-// Default constructor
+/** 
+ * Default MQTTBroker constructor.
+ * 
+ * Creates an **IPv4** instance of MQTTBroker running on port **7733**.
+ */ 
 MQTTBroker::MQTTBroker()
 {
 	this->service = BROKER_PORT;
@@ -125,7 +141,12 @@ MQTTBroker::MQTTBroker()
 	}
 }
 
-// Parametrized constructor
+/**
+ * Parametrised MQTTBroker constructor.
+ *
+ * @param int _service port: of the new MQTTBroker instance
+ * @param int _af_family: network family of sctp MQTTBroker socket. AF_INET or AF_INET6.
+ */
 MQTTBroker::MQTTBroker(int _service, int _af_family)
 {
 	this->service = _service;
@@ -138,11 +159,14 @@ MQTTBroker::MQTTBroker(int _service, int _af_family)
 	}
 }
 
-int MQTTBroker::getService()
-{
-	return this->service;
-}
-
+/**
+ * Prepare MQTTBroker for server duties.
+ *
+ * Creates an SCTP socket and binds it to **service**. SCTP event listeners are set.
+ *
+ * @returns 0 no errors occured.
+ * @returns 1 prepare_server error.
+ */
 int MQTTBroker::prepare_server()
 {
 	if ((sock_fd = socket(af_family, SOCK_SEQPACKET, IPPROTO_SCTP)) == -1)
@@ -179,6 +203,12 @@ int MQTTBroker::prepare_server()
 	return 0;
 }
 
+/**
+ * Set SCTP event options.
+ *
+ * @returns 0 no errors.
+ * @returns 1 set_options error.
+ */
 int MQTTBroker::set_options()
 {
 	bzero(&evnts, sizeof(evnts));
@@ -194,6 +224,12 @@ int MQTTBroker::set_options()
 	return 0;
 }
 
+/**
+ * Put broker socket in listening mode.
+ *
+ * @returns 0 no errors.
+ * @returns 1 listen_msg error.
+ */
 int MQTTBroker::listen_msg()
 {
 	if (listen(sock_fd, LISTENQ) == -1)
@@ -205,22 +241,28 @@ int MQTTBroker::listen_msg()
 	return 0;
 }
 
+/**
+ * Manages adding new clients to **topic** unordered_map.
+ *
+ * @param struct mqtt_msg *msg_tmp: pointer on message received from client.
+ *
+ * @returns 0: no errors.
+ * @returns 1: add_to_topics error.
+ */
 int MQTTBroker::add_to_topics(struct mqtt_msg * msg_tmp)
 {
-	//char topic_buff[msg.topic_len];
-	//strncpy(topic_buff, msg.topic, msg.topic_len);
-	//string topic_tmp(topic_buff);
 	string topic_tmp(msg_tmp->topic);
 
+	// Check if **topic_tmp** is in topic unordered_map. If not, create new key.
 	if (topics.empty() || topics.find(topic_tmp) == topics.end())
 	{
-		topics[topic_tmp] = vector<vector<struct sctp_sndrcvinfo> > (2); // Initialize  
+		topics[topic_tmp] = vector<vector<struct sctp_sndrcvinfo> > (2); // Initialize double vector for **topic_tmp** key.
 		topics[topic_tmp][SUBSCRIBER] = vector<struct sctp_sndrcvinfo> (); 
 		topics[topic_tmp][PUBLISHER] = vector<struct sctp_sndrcvinfo> (); 
 		printf("New topic: %s.\n", topic_tmp.c_str());
 	}
 
-	topics[topic_tmp][msg_tmp->cli_type].push_back(sri);
+	topics[topic_tmp][msg_tmp->cli_type].push_back(sri);// Add new subscriber to **topic_tmp** key vector.
 
 	if (msg_tmp->cli_type == SUBSCRIBER)
 		printf("New topic entry: SUBSCRIBER\n");
@@ -229,37 +271,37 @@ int MQTTBroker::add_to_topics(struct mqtt_msg * msg_tmp)
 	return 0;
 }
 
+/**
+ * Manages adding associations of new subscribers to **sub_assocs** unordered_map.
+ *
+ * @param struct mqtt_msg* msg_tmp: pointer on message received from subscriber.
+ * @param stuct sctp_sndrcvinfo *sri_tmp: pointer on sctp sctructure containing association number information.
+ *
+ * @returns 0: no errors.
+ * @returns 1: add_to_sub_assocs error.
+ */
 int MQTTBroker::add_to_sub_assocs(struct mqtt_msg *msg_tmp, struct sctp_sndrcvinfo *sri_tmp)
 {
 	string topic_tmp(msg_tmp->topic);
 
 	if (sub_assocs.empty() || sub_assocs.find(sri_tmp->sinfo_assoc_id) == sub_assocs.end())
-		sub_assocs[sri_tmp->sinfo_assoc_id] = vector<string>(); // Initialize  
+		sub_assocs[sri_tmp->sinfo_assoc_id] = vector<string>(); // Initialize if no client in the sub_assocs unordered_map.
 
 	sub_assocs[sri_tmp->sinfo_assoc_id].push_back(topic_tmp); // Add topic to subscriber
 	printf("Assoc_id: %d, added topic: %s\n", sri_tmp->sinfo_assoc_id, topic_tmp.c_str());
 
 	return 0;
 }
-//int MQTTBroker::notify_subscribers()
-//{
-//	printf("Notifying subscribers on topic: %s\n", msg.topic);
-//	string topic_tmp(msg.topic);
-//
-//	if (topics.empty() || topics.find(topic_tmp) == topics.end()){
-//		fprintf(stderr, "error: notify_subscribers, no topic: %s!!!\n", topic_tmp.c_str());
-//		return 1;
-//	}
-//
-//	for(struct sctp_sndrcvinfo sri_tmp : topics[topic_tmp][SUBSCRIBER])
-//	{
-//		send_mqtt(&msg, sizeof(msg), &sri_tmp);
-//		printf("Subscriber on topic: %s notified!\n", topic_tmp.c_str());
-//	}
-//
-//	return 0;
-//}
-//
+
+/**
+ * Notifys all clients subscribing given topic.
+ *
+ * @param struct mqtt_msg *msg_tmp: Message to send.
+ * @param size_t msg_len: length of 1st param.
+ *
+ * @returns 0: no errors.
+ * @returns 1: notify_subscribers error.
+ */
 int MQTTBroker::notify_subscribers(struct mqtt_msg *msg_tmp, size_t msg_len)
 {
 	printf("Notifying subscribers on topic: %s\n", msg_tmp->topic);
@@ -279,6 +321,13 @@ int MQTTBroker::notify_subscribers(struct mqtt_msg *msg_tmp, size_t msg_len)
 	return 0;
 }
 
+/** Removes subscriber of given association id from **topics** and **sub_assocs** unordered_maps.
+ *
+ * @param sctp_assoc_t assoc_id: Association id of subscriber.
+ *
+ * @returns 0: no errors.
+ * @returns 1: remove_subs error.
+ */
 int MQTTBroker::remove_subs(sctp_assoc_t assoc_id)
 {
 	if (sub_assocs.empty() || sub_assocs.find(assoc_id) == sub_assocs.end())
@@ -430,6 +479,12 @@ void MQTTBroker::print_notification(char *notify_buf)
 	}
 }
 
+/**
+ * Receives SCTP message and manages it handling.
+ *
+ * @returns 0: no errors.
+ * @returns 1: recv_mqtt error.
+ */
 int MQTTBroker::recv_mqtt()
 {
 	if (sctp_recvmsg(sock_fd, readbuf, sizeof(readbuf), NULL, NULL,
@@ -464,6 +519,16 @@ int MQTTBroker::recv_mqtt()
 	return 0;
 }
 
+/** 
+ * Send given message to a client.
+ *
+ * @param struct mqtt_msg *msg_tmp: pointer on mqtt message to be send.
+ * @param size_t msg_len: length of 1st param.
+ * @param struct sctp_sndrcvinfo *sri_tmp: SCTP struct with connection information.
+ *
+ * @returns 0: no errors.
+ * @returns 1: send_mqtt error.
+ */
 int MQTTBroker::send_mqtt(struct mqtt_msg *msg_tmp, size_t msg_len, struct sctp_sndrcvinfo *sri_tmp)
 {
 	if ((sctp_send(sock_fd, msg_tmp, msg_len, sri_tmp, 0)) < 0)
@@ -474,6 +539,9 @@ int MQTTBroker::send_mqtt(struct mqtt_msg *msg_tmp, size_t msg_len, struct sctp_
 	return 0;
 }
 
+/**
+ * Executes the process of handling clients and their messages.
+ */
 int MQTTBroker::start_processing()
 {
 	printf("MQTTBroker is running on port: %d.\n", this->service);
@@ -486,6 +554,12 @@ int MQTTBroker::start_processing()
 	return 0;
 }
 
+/**
+ * Default MQTTClient contructor.
+ *
+ * By default MQTTClient looks for MQTTBroker on port 7733 IPv4 socket.
+ * This constructor start connection with MQTTBroker immediately.
+ */
 MQTTClient::MQTTClient()
 {
 	this->service = BROKER_PORT;
@@ -506,7 +580,14 @@ MQTTClient::MQTTClient()
 	}
 }
 
-// Parametrized constructor
+/**
+ * Parametrized MQTTClient constructor.
+ *
+ * @param char *_broker_ip: pointer on MQTTBroker ip address.
+ * @param size_t ip_len: length of _borker_ip.
+ * @param int _service: MQTTBroker port.
+ * @param int _af_family: client socket address family
+ */
 MQTTClient::MQTTClient(char *_broker_ip, size_t ip_len, int _service, int _af_family)
 {
 	strncpy(this->broker_ip, _broker_ip, ip_len);
@@ -528,6 +609,12 @@ MQTTClient::MQTTClient(char *_broker_ip, size_t ip_len, int _service, int _af_fa
 	}
 }
 
+/**
+ * Prepare client for connecting the MQTTBroker.
+ *
+ * returns 0: no errors.
+ * returns 1: prepare_client error.
+ */
 int MQTTClient::prepare_client()
 {
 	bzero(&broker_addr, sizeof(broker_addr));
@@ -552,6 +639,11 @@ int MQTTClient::prepare_client()
 	return 0;
 }
 
+/** Set SCTP event options.
+ *
+ * returns 0: no errors.
+ * returns 1: set_options error.
+ */
 int MQTTClient::set_options()
 {
 	bzero(&evnts, sizeof(evnts));
@@ -589,6 +681,12 @@ int MQTTClient::send_mqtt()
 	return 0;
 }
 
+/** 
+ * Receives mqtt_msg.
+ *
+ * @returns 0: no errors.
+ * @returns 1: recv_mqtt error.
+ */
 int MQTTClient::recv_mqtt()
 {
 	if (recv(sock_fd, &msg, sizeof(msg), 0) == -1)
@@ -602,6 +700,19 @@ int MQTTClient::recv_mqtt()
 	return 0;
 }
 
+/** 
+ * Publish mqtt message.
+ *
+ * Sends mqtt_msg on giben topic and with given data to MQTTBroker.
+ *
+ * @param char *topic: pointer on topic name.
+ * @param size_t topic_len: sizeof(topic).
+ * @param char *data: pointer on data to send.
+ * @param size_t data_len: sizeof(data)
+ *
+ * @returns 0: no error.
+ * @returns 1: publish error.
+ */
 int MQTTClient::publish(char *topic, size_t topic_len, char *data, size_t data_len)
 {
 	msg.cli_type = PUBLISHER;
@@ -622,6 +733,15 @@ int MQTTClient::publish(char *topic, size_t topic_len, char *data, size_t data_l
 	return 0;
 }
 
+/**
+ * Adds callback to given topic.
+ *
+ * @param string topic_name: name of the topic a callback is to be attached to.
+ * @param void (\*callback)(struct mqtt_msg\*): pointer to function being called on message receiption.
+ *
+ * @returns 0: no errors.
+ * @returns 1: add_callback error.
+ */
 int MQTTClient::add_callback(string topic_name, void (*callback)(struct mqtt_msg*) )
 {
 	if (callbacks.find(topic_name) != callbacks.end()){
@@ -634,6 +754,14 @@ int MQTTClient::add_callback(string topic_name, void (*callback)(struct mqtt_msg
 	return 0;
 }
 
+/**
+ * Runs callback assigned to given message and topic.
+ *
+ * @param struct mqtt_msg *msg: pointer to received mqtt_message.
+ *
+ * @returns 0: no error.
+ * @returns 1: run_callback error.
+ */
 int MQTTClient::run_callback(struct mqtt_msg *msg)
 {
 	string topic_tmp(msg->topic);
@@ -647,6 +775,16 @@ int MQTTClient::run_callback(struct mqtt_msg *msg)
 	return 0;
 }
 
+/**
+ * Subscribes given topic.
+ *
+ * @param char *topic: pointer on subscribed topic.
+ * @param size_t topic_len: length of the topic.
+ * @param void (*callback_)(struct mqtt_msg*): pointer on callback.
+ *
+ * @returns 0: no errors.
+ * @returns 1: subscribe error.
+ */
 int MQTTClient::subscribe(char *topic, size_t topic_len, void (*callback_)(struct mqtt_msg*) )
 {
 	this->callback = callback_;
@@ -671,6 +809,12 @@ int MQTTClient::subscribe(char *topic, size_t topic_len, void (*callback_)(struc
 	return 0;
 }
 
+/**
+ * Start listening process.
+ *
+ * @returns 0: no errors.
+ * @returns 1: listen error.
+ */
 int MQTTClient::listen()
 {
 	while(true)
@@ -685,10 +829,5 @@ int MQTTClient::listen()
 		//(*this->callback)(&msg);
 	}
 
-	return 0;
-}
-
-int MQTTClient::unsubscribe()
-{
 	return 0;
 }

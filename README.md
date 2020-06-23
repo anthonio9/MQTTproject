@@ -14,21 +14,36 @@ MQTTBroker implements an instance of *broker* - process broadcasting messages pu
 By default broker process runs on port **7733**, both on IPv4 and IPv6, however this can be modified whilst using a parametrised constructor.
 
 * topics - dict with lists of publishers and subscribers bound to certain topic.
+* sub_assocs - dict/unordered_map associating association id with subscribed topics.
 
-**Public:**
-- MQTTBroker() - default constructor,
-- MQTTBroker(int \_service, int \_af_family) - parametrised constructor, create instance, af_family, local_port
-- getService() - return service port number.
-- start_processing() - start MQTTBroker forever loop.
+### Public
++ MQTTBroker()
+	default constructor,
++ MQTTBroker(int \_service, int \_af_family)
+	parametrised constructor, create instance, af_family, local_port
++ start_processing()
+	Executes the process of handling clients and their messages.
 
-**Private:**
-- prepare_server() - create server socket and bind it to port and address.
-- set_options() - set socket options.
-- listen_msg() - put socket in listening state.
-- add_to_topics() - add subscriber to topics.
-- notify_subscribers() - send message to subscribers subscribed to certain topic.
-- recv_mqtt() - wait for mqtt message.
-- send_mqtt() - send mqtt message.
+### Protected
++ prepare\_server() 
+	Create server socket and bind it to port and address.
++ set\_options()
+	Sets socket options.
++ listen_msg()
+	Puts socket in listening state.
++ add_to_sub_assocs(struct mqtt_msg \*msg_tmp, struct sctp_sndrcvinfo \*sri_tmp) 
+	Manages addition of associations of the new subscribers to **sub\_assocs** unordered\_map.
++ add\_to\_topics(struct mqtt_msg \*msg_tmp)
+	Manages adding new clients to **topic** unordered_map.
++ notify_subscribers(struct mqtt_msg \*msg_tmp, size_t msg_len) 
+	Send message to subscribers subscribed to given topic.
++ print_notification(char \*notify_buf)
++ remove_subs(sctp_assoc_t assoc_id)
+	Removes subscriber of given association id from **topics** and **sub_assocs** unordered_maps.
++ recv_mqtt() 
+	Receives MQTT/SCTP message and manages it handling.
++ send_mqtt()
+	Send given message to a client.
 
 
 ## MQTTClient
@@ -36,18 +51,23 @@ By default broker process runs on port **7733**, both on IPv4 and IPv6, however 
 MQTTClient implements functionality of subscriber and publisher. One can publish and subsribe using one class instance.
 This class is also capable of subscribing multiple topics with a callback to each of them.
 
-**Public**
+### Public
 
-+ MQTTClient() - create instance, af_family, srv_address, srv_port
-+ MQTTClient(char \_broker_ip,int \_service, int \_af_family) - parametrised constructor, create instance, af_family, local_port_ recv_mqtt() - wait for mqtt message.
-+ send_mqtt() - send mqtt message.
-+ recv_mqtt() - wait for mqtt message.
-+ publish(char \*topic, size_t topic_len, char \*data, size_t data_len) - publish message on certain topic
++ MQTTClient()
+	Default constructor.
++ MQTTClient(char \_broker_ip,int \_service, int \_af_family) 
+	Parametrised constructor.
++ send_mqtt()
+	Send mqtt message.
++ recv_mqtt()
+	Wait for mqtt message.
++ publish(char \*topic, size_t topic_len, char \*data, size_t data_len)
+	publish message on certain topic
 + subscribe(char \*topic, size_t topic_len) - subscribe to certain topic
 + listen() - start listening for messages on subscribed topics
-+ unsubscribe() - unsubscribe from certain topic
 
 **Private:**
 
 - prepare_client() - create client socket.
 - set_options() - set socket options.
++ add_callback
